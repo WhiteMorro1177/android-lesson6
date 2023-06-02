@@ -2,10 +2,8 @@ package ru.mirea.tsybulko.internalfilestorage
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.PackageManagerCompat.LOG_TAG
 
 
 class MainActivity : AppCompatActivity() {

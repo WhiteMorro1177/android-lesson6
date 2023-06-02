@@ -7,6 +7,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import java.io.*
 import java.nio.charset.StandardCharsets
 
@@ -28,44 +29,57 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun writeFileToExternalStorage() {
+        val filename = findViewById<EditText>(R.id.editTextFilename).text.toString()
+
         val path: File =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-        val file = File(path, findViewById<EditText>(R.id.editTextFilename).text.toString())
+        val file = File(
+            path,
+            when {
+                filename.endsWith(".txt") -> filename
+                else -> "$filename.txt"
+            }
+        )
+
         try {
             OutputStreamWriter(FileOutputStream(file.absoluteFile)).run {
-                write(findViewById<EditText>(R.id.editTextQuote).text.toString())
+                write("${findViewById<EditText>(R.id.editTextQuote).text}\n")
                 close()
+                Log.d("ExternalStorage", "Writing $file complete")
             }
         } catch (e: IOException) {
             Log.w("ExternalStorage", "Error writing $file", e)
-            file.createNewFile()
-            writeFileToExternalStorage()
         }
     }
 
     private fun readFileFromExternalStorage() {
-        val lines: List<String> = ArrayList()
+        val filename = findViewById<EditText>(R.id.editTextFilename).text.toString()
+        var lines: List<String>
         val path: File =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-        val file = File(path, findViewById<EditText>(R.id.editTextFilename).text.toString())
+        val file = File(
+            path,
+            when {
+                filename.endsWith(".txt") -> filename
+                else -> "$filename.txt"
+            }
+        )
 
         try {
             val inputStreamReader =
                 InputStreamReader(FileInputStream(file.absoluteFile), StandardCharsets.UTF_8)
-            val reader = BufferedReader(inputStreamReader)
-            var line: String = reader.readLine()
-            while (line != null) {
-                lines.plus(line)
-                line = reader.readLine()
+
+            BufferedReader(inputStreamReader).run {
+                lines = this.readLines()
+                close()
             }
+
             Log.w(
                 "ExternalStorage",
                 java.lang.String.format("Read from file %s successful", lines.toString())
             )
-            for (i in 0 until lines.stream().count()) {
-                findViewById<TextView>(R.id.tvFileData).text =
-                    findViewById<EditText>(R.id.editTextQuote).text.toString()
-            }
+
+            findViewById<TextView>(R.id.tvFileData).text = lines.toString()
         } catch (e: Exception) {
             Log.w("ExternalStorage", String.format("Read from file %s failed", e.message))
         }
